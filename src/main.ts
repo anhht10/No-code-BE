@@ -1,20 +1,20 @@
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
-import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-
+import cookieParser from 'cookie-parser';
+import * as dotenv from 'dotenv';
+import { AppModule } from './app.module';
+dotenv.config();
 async function bootstrap() {
+  const logger = new Logger('Bootstrap')
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
-  const port = configService.get<string>('PORT');
   app.setGlobalPrefix('api');
   
   app.use(cookieParser());
 
   const configSwagger =  new DocumentBuilder()
-    .setTitle('MediPath API')
-    .setDescription('The MediPath API description')
+    .setTitle('Autocode API')
+    .setDescription('The Autocode API description')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
@@ -29,6 +29,10 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(port ?? 3000);
+  await app.listen(process.env.PORT ?? 3000);
+  logger.log(`Application is running on: http://localhost:${process.env.PORT ?? 3000}`);
+  logger.log(`Swagger docs available at: http://localhost:${process.env.PORT ?? 3000}/docs`);
 }
 bootstrap();
+
+
