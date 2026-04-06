@@ -1,0 +1,24 @@
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { CourseService } from './course.service';
+import { CourseDetailParamsDto } from './dto/course.dto';
+
+@ApiTags('Courses')
+@Controller()
+export class CourseController {
+    constructor(private readonly courseService: CourseService) { }
+
+    @Get('courses')
+    @ApiOperation({ summary: 'Get course list with lesson count and industry name' })
+    getCourses() {
+        return this.courseService.getCourses();
+    }
+
+    @Get('course-detail')
+    @ApiOperation({ summary: 'Get course detail by slug' })
+    @ApiQuery({ name: 'slug', type: String, example: 'nestjs-fundamentals' })
+    getCourseDetail(@Query() params: CourseDetailParamsDto) {
+        const { slug } = params;
+        return this.courseService.getCourseDetail(slug);
+    }
+}
