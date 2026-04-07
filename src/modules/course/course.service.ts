@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from './schemas/course.schema';
+import { CreateCourseDto } from './dto/course.dto';
 
 type CourseRecord = Record<string, any>;
 
@@ -189,4 +190,14 @@ export class CourseService {
             modules,
         };
     }
+
+async create(createCourseDto: CreateCourseDto) {
+  const courseData = {
+    ...createCourseDto,
+    industryId: new Types.ObjectId(createCourseDto.industryId),
+  };
+  
+  const newCourse = new this.courseModel(courseData);
+  return newCourse.save();
+}
 }

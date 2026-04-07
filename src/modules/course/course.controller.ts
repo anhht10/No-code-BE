@@ -1,7 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CourseService } from './course.service';
-import { CourseDetailParamsDto } from './dto/course.dto';
+import { CourseDetailParamsDto, CreateCourseDto } from './dto/course.dto';
 
 @ApiTags('Courses')
 @Controller()
@@ -21,4 +21,11 @@ export class CourseController {
         const { slug } = params;
         return this.courseService.getCourseDetail(slug);
     }
+
+    @Post('/courses')
+    @ApiOperation({ summary: 'Create a new course' })
+    createCourse(@Body() createCourseDto: CreateCourseDto) {
+        return this.courseService.create(createCourseDto);
+    }
 }
+

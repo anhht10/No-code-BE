@@ -31,9 +31,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 3000);
-  logger.log(`Application is running on: http://localhost:${process.env.PORT ?? 3000}`);
-  logger.log(`Swagger docs available at: http://localhost:${process.env.PORT ?? 3000}/docs`);
+  await app.listen(process.env.PORT ?? 3001);
+  logger.log(`Application is running on: http://localhost:${process.env.PORT ?? 3001}`);
+  logger.log(`Swagger docs available at: http://localhost:${process.env.PORT ?? 3001}/docs`);
 }
 bootstrap();
 
