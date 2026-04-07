@@ -6,10 +6,6 @@ export class CourseDetailParamsDto {
 
   @ApiProperty({ example: 'nestjs-fundamentals' })
   @IsString()
-  title: string;
-
-  @ApiProperty({ example: 'nestjs-fundamentals' })
-  @IsString()
   slug: string;
 }
 

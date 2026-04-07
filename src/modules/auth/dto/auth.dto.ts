@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsDateString, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { UserResponseDto } from '../../user/dto/user.dto';
 
 export class LoginDto {
@@ -16,13 +16,9 @@ export class LoginDto {
 }
 
 export class RegisterDto {
-    @ApiProperty({ example: 'Nguyễnthailam,', description: 'teen của người dùng' })
+    @ApiProperty({ example: 'Nguyễnthailam,', description: 'Tên của người dùng' })
     @IsOptional() @IsString()
     name?: string;
-
-    @ApiProperty({ example: '0905123456', description: 'Số điện thoại' })
-    @IsOptional() @IsString()
-    phone?: string;
 
     @ApiProperty({ example: 'nguyenvana@gmail.com' })
     @IsNotEmpty() @IsEmail()

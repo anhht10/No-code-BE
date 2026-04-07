@@ -36,14 +36,14 @@ export class AuthController {
   }
 
   @Public()
-  @Post("login/doctor")
-@ResponseMessage('Bác sĩ đã đăng nhập thành công')
+  @Post('login/admin')
+  @ResponseMessage('Admin đã đăng nhập thành công')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ description: 'Bác sĩ đã đăng nhập thành công' })
-  async doctorLogin(@Body() loginDto: LoginDto, @Req() req: Request) {
+  @ApiOkResponse({ description: 'Admin đã đăng nhập thành công' })
+  async adminLogin(@Body() loginDto: LoginDto, @Req() req: Request) {
     const ipAddress = req.ip || 'Unknown IP';
     const deviceInfo = req.headers['user-agent'] || 'Unknown Device';
-    return this.authService.login(loginDto, ipAddress, deviceInfo, 'doctor');
+    return this.authService.login(loginDto, ipAddress, deviceInfo, 'admin');
   }
 
 

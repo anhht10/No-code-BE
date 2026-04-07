@@ -8,28 +8,22 @@ export class UserResponseDto {
     id: string;
 
     @Expose()
-    role: string;
+    username: string;
 
     @Expose()
-    firstName?: string;
+    name: string;
 
     @Expose()
-    lastName?: string;
+    email: string;
 
     @Expose()
-    identifiedID?: string;
+    avatar?: string;
 
     @Expose()
     gender?: string;
 
     @Expose()
-    dob?: string;
-
-    @Expose()
-    phone?: string;
-
-    @Expose()
-    email: string;
+    role: string;
 
     @Expose()
     createdAt: Date;
