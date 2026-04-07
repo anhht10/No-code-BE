@@ -14,10 +14,14 @@ import { PostModule } from './modules/post/post.module';
 import { SkillModule } from './modules/skill/skill.module';
 import { UserModule } from './modules/user/user.module';
 import { UserLogModule } from './modules/user_log/user_log.module';
-
+import { AuthModule } from './modules/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // <--- Dòng này cho phép dùng ConfigService toàn app
+    }),
     MongooseModule.forRootAsync({
       useFactory: () => {
         const mongoUri = process.env.MONGODB_URL;
@@ -38,6 +42,7 @@ import { UserLogModule } from './modules/user_log/user_log.module';
     SkillModule,
     UserModule,
     UserLogModule,
+    AuthModule,
   ],
     controllers: [AppController],
   providers: [AppService,
