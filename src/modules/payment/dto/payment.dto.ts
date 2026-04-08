@@ -32,3 +32,66 @@ export class CreatePayosPaymentDto {
     @IsString()
     userEmail?: string;
 }
+
+export class PayosWebhookDataDto {
+    @ApiPropertyOptional({ example: 1775580257757 })
+    @IsOptional()
+    @IsNumber()
+    orderCode?: number;
+
+    @ApiPropertyOptional({ example: 'PAID' })
+    @IsOptional()
+    @IsString()
+    status?: string;
+
+    @ApiPropertyOptional({ example: 299000 })
+    @IsOptional()
+    @IsNumber()
+    amount?: number;
+
+    @ApiPropertyOptional({ example: 'Thanh toan khoa hoc NestJS Fundamentals' })
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+    @ApiPropertyOptional({ example: 'abcd1234' })
+    @IsOptional()
+    @IsString()
+    paymentLinkId?: string;
+
+    @ApiPropertyOptional({ example: 'https://pay.payos.vn/web/123' })
+    @IsOptional()
+    @IsString()
+    checkoutUrl?: string;
+
+    @ApiPropertyOptional({ example: '00' })
+    @IsOptional()
+    @IsString()
+    code?: string;
+
+    @ApiPropertyOptional({ example: 'Thành công' })
+    @IsOptional()
+    @IsString()
+    desc?: string;
+}
+
+export class PayosWebhookDto {
+    @ApiPropertyOptional({ example: '00' })
+    @IsOptional()
+    @IsString()
+    code?: string;
+
+    @ApiPropertyOptional({ example: 'success' })
+    @IsOptional()
+    @IsString()
+    desc?: string;
+
+    @ApiPropertyOptional({ type: PayosWebhookDataDto })
+    @IsOptional()
+    data?: PayosWebhookDataDto;
+
+    @ApiPropertyOptional({ example: '77a49c48124234facfeff2e5d6020c25fe8d869010c18459b65b56b00ab0fd09' })
+    @IsOptional()
+    @IsString()
+    signature?: string;
+}

@@ -2,7 +2,8 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectModel } from '@nestjs/mongoose';
 import { createHmac } from 'crypto';
 import { Model, Types } from 'mongoose';
-import { CreatePayosPaymentDto } from './dto/payment.dto';
+import { PaymentMailService } from '../payment-mail/payment-mail.service';
+import { CreatePayosPaymentDto, PayosWebhookDto } from './dto/payment.dto';
 import { Payment, PaymentDocument } from './schemas/payment.schema';
 
 type PayosApiResponse = {
@@ -31,6 +32,7 @@ export class PaymentService {
     constructor(
         @InjectModel(Payment.name)
         private readonly paymentModel: Model<PaymentDocument>,
+        private readonly paymentMailService: PaymentMailService,
     ) {}
 
     async createPayosPayment(payload: CreatePayosPaymentDto) {
@@ -75,11 +77,16 @@ export class PaymentService {
 
         await this.paymentModel.create({
             orderId: String(orderCode),
+            orderCode,
             amount,
             status: 'pending',
             description,
-            userId: this.toObjectId(payload.userId, 'userId'),
-            courseId: this.toObjectId(payload.courseId, 'courseId'),
+            userEmail: payload.userEmail,
+            userId: this.toObjectId(payload.userId),
+            courseId: this.toObjectId(payload.courseId),
+            paymentLinkId: result.data.paymentLinkId,
+            checkoutUrl: result.data.checkoutUrl,
+            payosStatus: result.data.status,
         });
 
         return {
@@ -91,6 +98,96 @@ export class PaymentService {
         };
     }
 
+    async handlePayosWebhook(payload: PayosWebhookDto) {
+        const orderCode = Number(payload?.data?.orderCode);
+        if (!Number.isFinite(orderCode)) {
+            return {
+                acknowledged: true,
+                processed: false,
+                message: 'Webhook received but orderCode is missing/invalid',
+            };
+        }
+
+        const payment = await this.paymentModel.findOne({ orderCode });
+        if (!payment) {
+            return {
+                acknowledged: true,
+                processed: false,
+                orderCode,
+                message: 'Webhook received but payment not found',
+            };
+        }
+
+        const webhookStatus = (payload.data?.status || '').toUpperCase();
+        const code = (payload.code || '').toUpperCase();
+
+        let mappedStatus: 'pending' | 'completed' | 'failed' | 'cancelled' = 'pending';
+
+        if (webhookStatus.includes('PAID') || code === '00') {
+            mappedStatus = 'completed';
+        } else if (webhookStatus.includes('CANCEL')) {
+            mappedStatus = 'cancelled';
+        } else if (webhookStatus.includes('FAIL') || code === '01' || code === '02') {
+            mappedStatus = 'failed';
+        }
+
+        payment.status = mappedStatus;
+        payment.payosStatus = payload.data?.status || payload.desc;
+        payment.paymentLinkId = payload.data?.paymentLinkId || payment.paymentLinkId;
+        payment.checkoutUrl = payload.data?.checkoutUrl || payment.checkoutUrl;
+
+        if (mappedStatus === 'completed') {
+            payment.payDate = new Date();
+        }
+
+        await payment.save();
+
+        if (mappedStatus === 'completed') {
+            await this.paymentMailService.sendSuccessEmailFromPayment({
+                orderCode: payment.orderCode,
+                orderId: payment.orderId,
+                amount: payment.amount,
+                userEmail: payment.userEmail,
+            });
+        }
+
+        return {
+            acknowledged: true,
+            processed: true,
+            message: 'Webhook processed successfully',
+            orderCode,
+            status: payment.status,
+        };
+    }
+    async getPayments(status?: string) {
+        const query: Record<string, unknown> = {};
+
+        if (status && status !== 'all') {
+            query.status = status.toLowerCase();
+        }
+
+        const payments = await this.paymentModel
+            .find(query)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return payments.map((payment) => {
+            const createdAt = (payment as unknown as { createdAt?: Date }).createdAt;
+
+            return {
+            id: String(payment._id),
+            orderId: payment.orderId,
+            orderCode: payment.orderCode,
+            amount: payment.amount,
+            status: payment.status,
+            description: payment.description,
+            userEmail: payment.userEmail,
+            payDate: payment.payDate,
+            createdAt,
+        };
+        });
+    }
+
     private buildDescription(description: string) {
         return description
             .replace(/\s+/g, ' ')
@@ -98,9 +195,9 @@ export class PaymentService {
             .slice(0, 25);
     }
 
-    private toObjectId(value: string | undefined, fieldName: string) {
+    private toObjectId(value?: string) {
         if (!value || !Types.ObjectId.isValid(value)) {
-            throw new BadRequestException(`${fieldName} is invalid`);
+            return undefined;
         }
         return new Types.ObjectId(value);
     }
