@@ -12,6 +12,7 @@ import { CourseSkillModule } from './modules/course-skill/course-skill.module';
 import { CourseModule } from './modules/course/course.module';
 import { IndustryModule } from './modules/industry/industry.module';
 import { LessonModule } from './modules/lesson/lesson.module';
+import { PaymentMailModule } from './modules/payment-mail/payment-mail.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { PostCategoryModule } from './modules/post-category/post-category.module';
 import { PostModule } from './modules/post/post.module';
@@ -39,6 +40,7 @@ import { UserLogModule } from './modules/user_log/user_log.module';
     IndustryModule,
     LessonModule,
     PaymentModule,
+    PaymentMailModule,
     PostModule,
     PostCategoryModule,
     SkillModule,
