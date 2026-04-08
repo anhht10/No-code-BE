@@ -23,7 +23,7 @@ export class PaymentMailService {
             return null;
         }
 
-        const subject = '[Xac nhan] Kich hoat khoa hoc thanh cong';
+        const subject = '[Xác nhận] Kích hoạt khóa học thành công';
 
         const log = await this.paymentMailModel.findOneAndUpdate(
             { orderCode: payload.orderCode },
@@ -261,22 +261,23 @@ export class PaymentMailService {
 <body>
     <div class="container">
         <div class="header">
-            <h1>KICH HOAT THANH CONG</h1>
+            <h1>KÍCH HOẠT THÀNH CÔNG</h1>
         </div>
         <div class="content">
-            <p>Xin chao,</p>
-            <p>Thanh toan cua ban da duoc xac nhan. Khoa hoc da san sang de bat dau.</p>
+            <p>Xin chào,</p>
+            <p>Chúc mừng! Khoản thanh toán của bạn đã được xác nhận. Khóa học của bạn đã được mở khóa và sẵn sàng để bắt đầu ngay bây giờ.</p>
             <div class="order-card">
                 <div class="order-row">
-                    <span class="label">Ma don hang:</span>
+                    <span class="label">Mã đơn hàng:</span>
                     <span class="value">#${params.orderId}</span>
                 </div>
                 <div class="order-row">
-                    <span class="label">So tien da tra:</span>
+                    <span class="label">Số tiền đã trả:</span>
                     <span class="value">${params.amount.toLocaleString('vi-VN')} VND</span>
                 </div>
             </div>
-            <a href="${params.appCourseUrl}" class="button">Bat dau hoc ngay</a>
+            <p>Hãy nhấn vào nút bên dưới để truy cập vào hệ thống học tập của bạn:</p>
+            <a href="${params.appCourseUrl}" class="button">Bắt đầu học ngay</a>
         </div>
         <div class="footer">
             <p>&copy; 2026 DCD Automation. All rights reserved.</p>
