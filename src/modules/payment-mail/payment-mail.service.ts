@@ -203,11 +203,21 @@ export class PaymentMailService {
             if (Number.isFinite(num)) return num;
         }
 
-        const tags = payload.data?.tags || [];
-        const tag = tags.find((item) => item?.name === 'orderCode');
-        if (tag?.value) {
-            const num = Number(tag.value);
-            if (Number.isFinite(num)) return num;
+        const tags = payload.data?.tags;
+        if (Array.isArray(tags)) {
+            const tag = tags.find((item) => item?.name === 'orderCode');
+            if (tag?.value) {
+                const num = Number(tag.value);
+                if (Number.isFinite(num)) return num;
+            }
+        }
+
+        if (tags && typeof tags === 'object' && !Array.isArray(tags)) {
+            const tagValue = (tags as Record<string, unknown>).orderCode;
+            if (tagValue !== undefined && tagValue !== null) {
+                const num = Number(tagValue);
+                if (Number.isFinite(num)) return num;
+            }
         }
 
         return undefined;
