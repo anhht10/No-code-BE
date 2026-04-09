@@ -1,5 +1,6 @@
-import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 import { CreatePayosPaymentDto, PayosWebhookDto } from './dto/payment.dto';
 import { PaymentService } from './payment.service';
@@ -29,5 +30,16 @@ export class PaymentController {
     @ApiQuery({ name: 'status', required: false, type: String })
     getPayments(@Query('status') status?: string) {
         return this.paymentService.getPayments(status);
+    }
+
+    @Get('my-courses')
+    @ApiOperation({ summary: 'Get purchased courses for current user' })
+    getMyPurchasedCourses(
+        @Req() req: Request & { user?: { userId?: string; email?: string } },
+        @Query('email') email?: string,
+    ) {
+        const userId = req.user?.userId;
+        const fallbackEmail = email || req.user?.email;
+        return this.paymentService.getMyPurchasedCourses(userId, fallbackEmail);
     }
 }

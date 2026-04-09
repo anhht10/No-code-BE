@@ -35,6 +35,24 @@ export class Lesson {
     @Prop({ type: Number, required: true, min: 1 })
     order: number;
 
+    @Prop({ type: String, default: '' })
+    summary?: string;
+
+    @Prop({ type: String, default: '' })
+    content?: string;
+
+    @Prop({ type: String, default: '' })
+    videoUrl?: string;
+
+    @Prop({ type: String, default: '' })
+    resourceUrl?: string;
+
+    @Prop({ type: String, default: '' })
+    thumbnail?: string;
+
+    @Prop({ type: Boolean, default: false })
+    isPreview?: boolean;
+
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);
