@@ -188,6 +188,87 @@ export class PaymentService {
         });
     }
 
+    async getMyPurchasedCourses(userId?: string, email?: string) {
+        if (!userId || !Types.ObjectId.isValid(userId)) {
+            if (!email) return [];
+        }
+
+        const userObjectId = userId && Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : null;
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        const matchConditions: Array<Record<string, unknown>> = [];
+
+        if (userObjectId) {
+            matchConditions.push({ userId: userObjectId });
+        }
+
+        if (normalizedEmail) {
+            matchConditions.push({ userEmail: normalizedEmail });
+        }
+
+        if (matchConditions.length === 0) {
+            return [];
+        }
+
+        const purchased = await this.paymentModel.aggregate([
+            {
+                $match: {
+                    status: { $in: ['completed', 'success'] },
+                    $or: matchConditions,
+                    courseId: { $exists: true, $ne: null },
+                },
+            },
+            {
+                $sort: { payDate: -1, createdAt: -1 },
+            },
+            {
+                $group: {
+                    _id: '$courseId',
+                    latestPayment: { $first: '$$ROOT' },
+                },
+            },
+            {
+                $replaceRoot: { newRoot: '$latestPayment' },
+            },
+            {
+                $lookup: {
+                    from: 'courses',
+                    localField: 'courseId',
+                    foreignField: '_id',
+                    as: 'course',
+                },
+            },
+            {
+                $unwind: {
+                    path: '$course',
+                    preserveNullAndEmptyArrays: false,
+                },
+            },
+            {
+                $project: {
+                    id: { $toString: '$course._id' },
+                    slug: '$course.slug',
+                    title: '$course.title',
+                    description: '$course.description',
+                    image: '$course.image',
+                    level: '$course.level',
+                    duration: '$course.duration',
+                    price: '$course.price',
+                    paidAmount: '$amount',
+                    orderId: '$orderId',
+                    orderCode: '$orderCode',
+                    purchasedAt: { $ifNull: ['$payDate', '$createdAt'] },
+                    paymentStatus: '$status',
+                },
+            },
+            {
+                $sort: { purchasedAt: -1 },
+            },
+        ]);
+
+        return purchased;
+    }
+
     private buildDescription(description: string) {
         return description
             .replace(/\s+/g, ' ')
