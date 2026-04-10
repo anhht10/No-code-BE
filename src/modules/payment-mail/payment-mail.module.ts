@@ -5,9 +5,13 @@ import { PaymentMailService } from './payment-mail.service';
 import { PaymentMail, PaymentMailSchema } from './schemas/payment-mail.schema';
 
 @Module({
-    imports: [MongooseModule.forFeature([{ name: PaymentMail.name, schema: PaymentMailSchema }])],
-    controllers: [PaymentMailController],
-    providers: [PaymentMailService],
-    exports: [PaymentMailService],
+  imports: [
+    MongooseModule.forFeature([
+      { name: PaymentMail.name, schema: PaymentMailSchema },
+    ]),
+  ],
+  controllers: [PaymentMailController],
+  providers: [PaymentMailService],
+  exports: [PaymentMailService],
 })
 export class PaymentMailModule {}

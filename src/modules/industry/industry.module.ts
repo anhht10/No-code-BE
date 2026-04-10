@@ -4,7 +4,11 @@ import { Industry, IndustrySchema } from './schemas/industry.schema';
 import { IndustryController } from './industry.controller';
 import { IndustryService } from './industry.service';
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Industry.name, schema: IndustrySchema }])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Industry.name, schema: IndustrySchema },
+    ]),
+  ],
   controllers: [IndustryController],
   providers: [IndustryService],
 })
