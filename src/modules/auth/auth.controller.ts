@@ -1,5 +1,19 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ResponseMessage } from '../../common/decorators/response-message.decorator';
 import { AuthService } from './auth.service';
@@ -13,7 +27,7 @@ import { JwtRefreshAuthGuard } from './gaurds/jwt-refresh.guard';
   version: '1',
 })
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('register')
@@ -46,11 +60,10 @@ export class AuthController {
     return this.authService.login(loginDto, ipAddress, deviceInfo, 'admin');
   }
 
-
   @Public()
   @UseGuards(JwtRefreshAuthGuard)
   @Post('refresh')
-  @ApiBearerAuth("RefreshToken")
+  @ApiBearerAuth('RefreshToken')
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: Request) {
     const user = req.user as any;
@@ -61,7 +74,7 @@ export class AuthController {
       user.userId,
       user.refreshToken,
       ipAddress,
-      deviceInfo
+      deviceInfo,
     );
   }
 
@@ -74,3 +87,4 @@ export class AuthController {
     return this.authService.logout(body.refreshToken);
   }
 }
+

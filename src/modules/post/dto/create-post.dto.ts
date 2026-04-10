@@ -1,25 +1,25 @@
-import { IsMongoId, IsNotEmpty, IsOptional } from "class-validator";
+import { IsMongoId, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreatePostDto {
-    @IsNotEmpty()
-    title?: string;
-    
-    @IsOptional()
-    slug?: string;
+  @IsNotEmpty()
+  title?: string;
 
-    @IsOptional()
-    content?: string;
-    
-    @IsOptional()
-    excerpt?: string;
+  @IsOptional()
+  slug?: string;
 
-    @IsOptional()
-    thumbnail?: string;
+  @IsOptional()
+  content?: string;
 
-    @IsOptional()
-    status?: string;
+  @IsOptional()
+  excerpt?: string;
 
-    @IsOptional()
-    @IsMongoId()
-    categoryId?: string;
+  @IsOptional()
+  thumbnail?: string;
+
+  @IsOptional()
+  status?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  categoryId?: string;
 }

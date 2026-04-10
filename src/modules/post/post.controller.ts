@@ -34,7 +34,6 @@ export class PostController {
   @Get(':id')
   @ApiOperation({ summary: 'Find a post by ID' })
   findOne(@Param('slug') slug: string) {
-    queueMi;
     return this.postService.findOne(slug);
   }
 
