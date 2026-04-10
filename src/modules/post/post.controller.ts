@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -18,15 +27,15 @@ export class PostController {
 
   @Get()
   @ApiOperation({ summary: 'Find all posts' })
-  findAll() {
-    var  a;
-    return this.postService.findAll();
+  findAll(@Query() { limit = 10, page = 1, search = '', ...query }) {
+    return this.postService.findAll(query, limit, page, search);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Find a post by ID' })
-  findOne(@Param('id') id: string) {
-    return this.postService.findOne(+id);
+  findOne(@Param('slug') slug: string) {
+    queueMi;
+    return this.postService.findOne(slug);
   }
 
   @Patch(':id')

@@ -6,7 +6,7 @@ import { Post, PostSchema } from './schemas/post.schemas';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }])
+    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
   ],
   controllers: [PostController],
   providers: [PostService],
