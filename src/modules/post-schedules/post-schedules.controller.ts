@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PostSchedulesService } from './post-schedules.service';
 import { CreatePostScheduleDto } from './dto/create-post-schedule.dto';
@@ -21,8 +22,8 @@ export class PostSchedulesController {
   }
 
   @Get()
-  findAll() {
-    return this.postSchedulesService.findAll();
+  findAll(@Query() { limit = 10, page = 1, search = '', ...query }) {
+    return this.postSchedulesService.findAll(query, limit, page, search);
   }
 
   @Get(':id')
