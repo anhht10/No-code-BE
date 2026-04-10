@@ -15,6 +15,7 @@ import { JwtAuthGuard } from './modules/auth/gaurds/jwt-auth.guard';
 import { CourseModuleModule } from './modules/course-module/course-module.module';
 import { CourseSkillModule } from './modules/course-skill/course-skill.module';
 import { CourseModule } from './modules/course/course.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { IndustryModule } from './modules/industry/industry.module';
 import { LessonModule } from './modules/lesson/lesson.module';
 import { PaymentMailModule } from './modules/payment-mail/payment-mail.module';
@@ -43,6 +44,7 @@ import { PostModule } from './modules/post/post.module';
       },
     }),
     CourseModule,
+    DashboardModule,
     CourseModuleModule,
     CourseSkillModule,
     IndustryModule,
