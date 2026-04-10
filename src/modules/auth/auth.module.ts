@@ -5,7 +5,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { RefreshToken, RefreshTokenSchema } from './schemas/refresh-token.schema';
+import {
+  RefreshToken,
+  RefreshTokenSchema,
+} from './schemas/refresh-token.schema';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule } from '@nestjs/config'; // Thêm dòng này
@@ -23,3 +26,4 @@ import { ConfigModule } from '@nestjs/config'; // Thêm dòng này
   exports: [JwtModule],
 })
 export class AuthModule {}
+
