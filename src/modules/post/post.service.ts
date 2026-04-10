@@ -19,7 +19,7 @@ export class PostService {
       'post',
       createPostDto.slug ?? createPostDto.title ?? '123',
     );
-    const post = await this.postModel.findOne({ ...createPostDto, slug });
+    const post = await this.postModel.create({ ...createPostDto, slug });
 
     return {
       _id: post?._id,
