@@ -1,5 +1,12 @@
+
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+
+export enum PostStatus {
+    DRAFT = 'draft',
+    PUBLISHED = 'published',
+    ARCHIVED = 'archived',
+}
 
 export type PostDocument = HydratedDocument<Post>;
 
@@ -14,7 +21,7 @@ export class Post {
     @Prop({ type: String, required: true, trim: true, maxlength: 200 })
     title: string;
 
-    @Prop({ type: String, required: true, unique: true, lowercase: true, trim: true })
+    @Prop({ type: String, unique: true, lowercase: true, trim: true })
     slug: string;
 
     @Prop({ type: String, default: '' })
@@ -26,17 +33,8 @@ export class Post {
     @Prop({ type: String })
     thumbnail: string;
 
-    @Prop({
-        type: String,
-        enum: ['draft', 'published', 'archived'],
-        default: 'draft',
-        index: true,
-    })
-    status: string;
-
-    @Prop({ type: Types.ObjectId, ref: 'PostCategory', required: true, index: true })
+    @Prop({ type: Types.ObjectId, ref: 'PostCategory',  index: true })
     categoryId: Types.ObjectId;
-
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
