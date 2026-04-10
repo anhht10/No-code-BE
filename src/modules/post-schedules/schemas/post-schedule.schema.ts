@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { PostCategory } from '../../post-category/schemas/post-category.schema';
-import { Post } from '@nestjs/common';
+import { Post } from '../../post/schemas/post.schemas';
 
 export enum StatusSchedulePost {
   TODO = 'todo',

@@ -10,12 +10,14 @@ import {
 import { PostCategoryService } from './post-category.service';
 import { CreatePostCategoryDto } from './dto/create-post-category.dto';
 import { UpdatePostCategoryDto } from './dto/update-post-category.dto';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('post-category')
 export class PostCategoryController {
   constructor(private readonly postCategoryService: PostCategoryService) {}
 
   @Post()
+  @Public()
   create(@Body() createPostCategoryDto: CreatePostCategoryDto) {
     return this.postCategoryService.create(createPostCategoryDto);
   }

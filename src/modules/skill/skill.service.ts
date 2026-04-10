@@ -10,6 +10,7 @@ import slugify from 'slugify';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill, SkillDocument } from './schemas/skill.schema';
+import { SlugCounterService } from '../slug-counter/slug-counter.service';
 
 type SkillRecord = {
   id: string;
@@ -29,22 +30,18 @@ export class SkillService {
   constructor(
     @InjectModel(Skill.name)
     private readonly skillModel: Model<SkillDocument>,
+     private slugCounterService: SlugCounterService,
   ) {}
 
-  async createSkill(payload: CreateSkillDto): Promise<SkillRecord> {
-    const resolvedSlug = await this.resolveUniqueSlug(payload.name, payload.slug);
-
-    try {
-      const created = await this.skillModel.create({
-        name: payload.name.trim(),
-        slug: resolvedSlug,
-      });
-
-      return this.toSkillRecord(created);
-    } catch (error: any) {
-      this.throwConflictIfDuplicate(error);
-      throw error;
-    }
+  async createSkill(payload: CreateSkillDto) {
+    const slug = await this.slugCounterService.generateSlug(
+      'skill',
+      payload.name ?? '123',
+    );
+    const post = await this.skillModel.create({ ...payload , slug });
+    return {
+      _id: post?._id,
+    };
   }
 
   async getSkills(): Promise<SkillRecord[]> {

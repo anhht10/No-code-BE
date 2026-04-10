@@ -43,23 +43,30 @@ export class PostSchedulesService {
           { keywords: { $regex: search, $options: 'i' } },
         ],
       })
+      .populate({ path: 'postId', select: '-__v' })
+      .populate({ path: 'categoryId', select: '-__v' })
       .select(projection ?? '-__v')
       .sort(sort as any)
       .limit(limit)
-      .skip((page - 1) * limit);
-
-    return schedule;
+      .skip((page - 1) * limit).lean();
+     return schedule.map(item => ({
+      ...item,
+      post: item.postId,
+      category: item.categoryId,
+      postId: undefined,
+      categoryId: undefined,
+    }));
   }
 
   findOne(id: number) {
     return `This action returns a #${id} postSchedule`;
   }
 
-  update(id: number, updatePostScheduleDto: UpdatePostScheduleDto) {
+  update(id: string, updatePostScheduleDto: UpdatePostScheduleDto) {
     return this.postScheduleModel.updateOne({ _id: id }, updatePostScheduleDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} postSchedule`;
+  remove(id: string): Promise<any> {
+    return this.postScheduleModel.deleteOne({ _id: id });
   }
 }
