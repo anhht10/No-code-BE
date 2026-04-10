@@ -25,6 +25,7 @@ import { SkillModule } from './modules/skill/skill.module';
 import { UserModule } from './modules/user/user.module';
 import { UserLogModule } from './modules/user_log/user_log.module';
 import { PostModule } from './modules/post/post.module';
+import { PostSchedulesModule } from './modules/post-schedules/post-schedules.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { PostModule } from './modules/post/post.module';
     UserLogModule,
     AuthModule,
     SlugCounterModule,
+    PostSchedulesModule,
   ],
   controllers: [AppController],
   providers: [
