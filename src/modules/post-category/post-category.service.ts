@@ -4,15 +4,25 @@ import { UpdatePostCategoryDto } from './dto/update-post-category.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { PostCategory } from './schemas/post-category.schema';
 import { Model } from 'mongoose';
+import { SlugCounterService } from '../slug-counter/slug-counter.service';
 
 @Injectable()
 export class PostCategoryService {
   constructor(
     @InjectModel(PostCategory.name)
     private postCategoryModel: Model<PostCategory>,
+    private slugCounterService: SlugCounterService,
   ) {}
-  create(createPostCategoryDto: CreatePostCategoryDto) {
-    return this.postCategoryModel.create(createPostCategoryDto);
+  async create(createPostCategoryDto: CreatePostCategoryDto) {
+    const slug = await this.slugCounterService.generateSlug(
+      'post-category',
+      createPostCategoryDto.title ?? '123',
+    );
+    const cat = await this.postCategoryModel.create({
+      ...createPostCategoryDto,
+      slug,
+    });
+    return cat;
   }
 
   findAll() {

@@ -1,4 +1,4 @@
-import { Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { PostCategory } from '../../post-category/schemas/post-category.schema';
 import { Post } from '@nestjs/common';
@@ -8,7 +8,13 @@ export enum StatusSchedulePost {
   DONE = 'done',
   PENDING = 'pending',
 }
-
+@Schema({
+  timestamps: true,
+  toObject: {
+    virtuals: true,
+    getters: true,
+  },
+})
 export class PostSchedule {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: PostCategory.name })
   categoryId: string;

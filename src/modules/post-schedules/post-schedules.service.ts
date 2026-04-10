@@ -39,7 +39,6 @@ export class PostSchedulesService {
       .find({
         ...filter,
         $or: [
-          { scheduleAt: { $regex: search, $options: 'i' } },
           { industry: { $regex: search, $options: 'i' } },
           { keywords: { $regex: search, $options: 'i' } },
         ],
