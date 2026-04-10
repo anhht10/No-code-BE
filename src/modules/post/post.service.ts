@@ -5,13 +5,25 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post } from './schemas/post.schemas';
 import aqp from 'api-query-params';
+import { SlugCounterService } from '../slug-counter/slug-counter.service';
 
 @Injectable()
 export class PostService {
-  constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<Post>,
+    private slugCounterService: SlugCounterService,
+  ) {}
 
-  create(createPostDto: CreatePostDto) {
-    return this.postModel.create(createPostDto);
+  async create(createPostDto: CreatePostDto) {
+    const slug = await this.slugCounterService.generateSlug(
+      'post',
+      createPostDto.slug ?? createPostDto.title ?? '123',
+    );
+    const post = await this.postModel.create({ ...createPostDto, slug });
+
+    return {
+      _id: post?._id,
+    };
   }
 
   async findAll(

@@ -2,244 +2,264 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ResendWebhookDto } from './dto/payment-mail.dto';
-import { PaymentMail, PaymentMailDocument } from './schemas/payment-mail.schema';
+import {
+  PaymentMail,
+  PaymentMailDocument,
+} from './schemas/payment-mail.schema';
 
 type PaymentMailSource = {
-    orderCode?: number;
-    orderId: string;
-    amount: number;
-    userEmail?: string;
+  orderCode?: number;
+  orderId: string;
+  amount: number;
+  userEmail?: string;
 };
 
 @Injectable()
 export class PaymentMailService {
-    constructor(
-        @InjectModel(PaymentMail.name)
-        private readonly paymentMailModel: Model<PaymentMailDocument>,
-    ) {}
+  constructor(
+    @InjectModel(PaymentMail.name)
+    private readonly paymentMailModel: Model<PaymentMailDocument>,
+  ) {}
 
-    async sendSuccessEmailFromPayment(payload: PaymentMailSource) {
-        if (!payload.orderCode || !payload.userEmail) {
-            return null;
-        }
+  async sendSuccessEmailFromPayment(payload: PaymentMailSource) {
+    if (!payload.orderCode || !payload.userEmail) {
+      return null;
+    }
 
-        const subject = '[Xác nhận] Kích hoạt khóa học thành công';
+    const subject = '[Xác nhận] Kích hoạt khóa học thành công';
 
-        const log = await this.paymentMailModel.findOneAndUpdate(
-            { orderCode: payload.orderCode },
-            {
-                $set: {
-                    orderId: payload.orderId,
-                    amount: payload.amount,
-                    userEmail: payload.userEmail,
-                    subject,
-                    status: 'pending',
-                },
-            },
-            { upsert: true, returnDocument: 'after' },
-        );
+    const log = await this.paymentMailModel.findOneAndUpdate(
+      { orderCode: payload.orderCode },
+      {
+        $set: {
+          orderId: payload.orderId,
+          amount: payload.amount,
+          userEmail: payload.userEmail,
+          subject,
+          status: 'pending',
+        },
+      },
+      { upsert: true, returnDocument: 'after' },
+    );
 
-        const apiKey = process.env.RESEND_API_KEY;
-        const fromEmail = this.resolveFromEmail();
-        const appCourseUrl = process.env.APP_COURSE_URL || 'https://chidung7271.id.vn';
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = this.resolveFromEmail();
+    const appCourseUrl =
+      process.env.APP_COURSE_URL || 'https://chidung7271.id.vn';
 
-        if (!apiKey || !fromEmail) {
-            console.warn('[PaymentMail] Missing RESEND_API_KEY or RESEND_FROM_EMAIL; skipping email send');
-            return log;
-        }
+    if (!apiKey || !fromEmail) {
+      console.warn(
+        '[PaymentMail] Missing RESEND_API_KEY or RESEND_FROM_EMAIL; skipping email send',
+      );
+      return log;
+    }
 
-        const html = this.buildSuccessEmailHtml({
-            orderId: payload.orderId,
-            amount: payload.amount,
-            appCourseUrl,
-        });
+    const html = this.buildSuccessEmailHtml({
+      orderId: payload.orderId,
+      amount: payload.amount,
+      appCourseUrl,
+    });
 
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [payload.userEmail],
+          subject,
+          html,
+          tags: [
+            { name: 'orderCode', value: String(payload.orderCode) },
+            { name: 'module', value: 'payment-success' },
+          ],
+          metadata: {
+            orderCode: String(payload.orderCode),
+          },
+        }),
+      });
+
+      const responseText = await response.text();
+      let result: { id?: string } = {};
+
+      if (responseText) {
         try {
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    from: fromEmail,
-                    to: [payload.userEmail],
-                    subject,
-                    html,
-                    tags: [
-                        { name: 'orderCode', value: String(payload.orderCode) },
-                        { name: 'module', value: 'payment-success' },
-                    ],
-                    metadata: {
-                        orderCode: String(payload.orderCode),
-                    },
-                }),
-            });
-
-            const responseText = await response.text();
-            let result: { id?: string } = {};
-
-            if (responseText) {
-                try {
-                    result = JSON.parse(responseText) as { id?: string };
-                } catch {
-                    result = {};
-                }
-            }
-
-            if (!response.ok) {
-                console.error('[PaymentMail] Resend send failed', { status: response.status, errorText: responseText });
-                await this.paymentMailModel.updateOne(
-                    { orderCode: payload.orderCode },
-                    {
-                        $set: {
-                            status: 'failed',
-                            resendLastEvent: 'send_failed',
-                            eventAt: new Date(),
-                        },
-                    },
-                );
-                return log;
-            }
-
-            const updatedLog = await this.paymentMailModel.findOneAndUpdate(
-                { orderCode: payload.orderCode },
-                {
-                    $set: {
-                        status: 'sent',
-                        resendEmailId: result.id,
-                        sentAt: new Date(),
-                        resendLastEvent: 'sent',
-                        eventAt: new Date(),
-                    },
-                },
-                { returnDocument: 'after' },
-            );
-
-            return updatedLog || log;
-        } catch (error) {
-            console.error('[PaymentMail] Failed to send success email', error);
-            await this.paymentMailModel.updateOne(
-                { orderCode: payload.orderCode },
-                {
-                    $set: {
-                        status: 'failed',
-                        resendLastEvent: 'send_failed',
-                        eventAt: new Date(),
-                    },
-                },
-            );
-            return log;
+          result = JSON.parse(responseText) as { id?: string };
+        } catch {
+          result = {};
         }
-    }
+      }
 
-    async handleResendWebhook(payload: ResendWebhookDto) {
-        const eventType = (payload.type || payload.data?.type || '').toLowerCase();
-        const emailId = payload.data?.email_id;
-        const orderCode = this.extractOrderCode(payload);
-
-        const query = emailId
-            ? { resendEmailId: emailId }
-            : orderCode
-                ? { orderCode }
-                : null;
-
-        if (!query) {
-            throw new BadRequestException('Missing resend email id or orderCode in webhook payload');
-        }
-
-        const emailStatus = this.mapResendEventToEmailStatus(eventType);
-
-        const doc = await this.paymentMailModel.findOneAndUpdate(
-            query,
-            {
-                $set: {
-                    resendLastEvent: eventType || 'unknown',
-                    eventAt: new Date(),
-                    ...(emailStatus ? { status: emailStatus } : {}),
-                },
+      if (!response.ok) {
+        console.error('[PaymentMail] Resend send failed', {
+          status: response.status,
+          errorText: responseText,
+        });
+        await this.paymentMailModel.updateOne(
+          { orderCode: payload.orderCode },
+          {
+            $set: {
+              status: 'failed',
+              resendLastEvent: 'send_failed',
+              eventAt: new Date(),
             },
-            { returnDocument: 'after' },
+          },
         );
+        return log;
+      }
 
-        if (!doc) {
-            throw new BadRequestException('Payment mail log not found for resend webhook payload');
-        }
+      const updatedLog = await this.paymentMailModel.findOneAndUpdate(
+        { orderCode: payload.orderCode },
+        {
+          $set: {
+            status: 'sent',
+            resendEmailId: result.id,
+            sentAt: new Date(),
+            resendLastEvent: 'sent',
+            eventAt: new Date(),
+          },
+        },
+        { returnDocument: 'after' },
+      );
 
-        return {
-            message: 'Resend webhook processed successfully',
-            orderCode: doc.orderCode,
-            emailStatus: doc.status,
-        };
+      return updatedLog || log;
+    } catch (error) {
+      console.error('[PaymentMail] Failed to send success email', error);
+      await this.paymentMailModel.updateOne(
+        { orderCode: payload.orderCode },
+        {
+          $set: {
+            status: 'failed',
+            resendLastEvent: 'send_failed',
+            eventAt: new Date(),
+          },
+        },
+      );
+      return log;
+    }
+  }
+
+  async handleResendWebhook(payload: ResendWebhookDto) {
+    const eventType = (payload.type || payload.data?.type || '').toLowerCase();
+    const emailId = payload.data?.email_id;
+    const orderCode = this.extractOrderCode(payload);
+
+    const query = emailId
+      ? { resendEmailId: emailId }
+      : orderCode
+        ? { orderCode }
+        : null;
+
+    if (!query) {
+      throw new BadRequestException(
+        'Missing resend email id or orderCode in webhook payload',
+      );
     }
 
-    async getMailLogs(status?: string) {
-        const query: Record<string, unknown> = {};
-        if (status && status !== 'all') {
-            query.status = status.toLowerCase();
-        }
+    const emailStatus = this.mapResendEventToEmailStatus(eventType);
 
-        const docs = await this.paymentMailModel.find(query).sort({ createdAt: -1 }).lean();
+    const doc = await this.paymentMailModel.findOneAndUpdate(
+      query,
+      {
+        $set: {
+          resendLastEvent: eventType || 'unknown',
+          eventAt: new Date(),
+          ...(emailStatus ? { status: emailStatus } : {}),
+        },
+      },
+      { returnDocument: 'after' },
+    );
 
-        return docs.map((doc) => ({
-            id: String(doc._id),
-            orderCode: doc.orderCode,
-            orderId: doc.orderId,
-            userEmail: doc.userEmail,
-            subject: doc.subject,
-            status: doc.status,
-            resendEmailId: doc.resendEmailId,
-            resendLastEvent: doc.resendLastEvent,
-            sentAt: doc.sentAt,
-            eventAt: doc.eventAt,
-            createdAt: (doc as unknown as { createdAt?: Date }).createdAt,
-        }));
+    if (!doc) {
+      throw new BadRequestException(
+        'Payment mail log not found for resend webhook payload',
+      );
     }
 
-    private extractOrderCode(payload: ResendWebhookDto) {
-        const metadataOrderCode = payload.data?.metadata?.orderCode;
-        if (metadataOrderCode) {
-            const num = Number(metadataOrderCode);
-            if (Number.isFinite(num)) return num;
-        }
+    return {
+      message: 'Resend webhook processed successfully',
+      orderCode: doc.orderCode,
+      emailStatus: doc.status,
+    };
+  }
 
-        const tags = payload.data?.tags;
-        if (Array.isArray(tags)) {
-            const tag = tags.find((item) => item?.name === 'orderCode');
-            if (tag?.value) {
-                const num = Number(tag.value);
-                if (Number.isFinite(num)) return num;
-            }
-        }
-
-        if (tags && typeof tags === 'object' && !Array.isArray(tags)) {
-            const tagValue = (tags as Record<string, unknown>).orderCode;
-            if (tagValue !== undefined && tagValue !== null) {
-                const num = Number(tagValue);
-                if (Number.isFinite(num)) return num;
-            }
-        }
-
-        return undefined;
+  async getMailLogs(status?: string) {
+    const query: Record<string, unknown> = {};
+    if (status && status !== 'all') {
+      query.status = status.toLowerCase();
     }
 
-    private mapResendEventToEmailStatus(eventType: string) {
-        if (!eventType) return undefined;
-        if (eventType.includes('opened')) return 'opened';
-        if (eventType.includes('clicked')) return 'clicked';
-        if (eventType.includes('delivered')) return 'delivered';
-        if (eventType.includes('bounced')) return 'bounced';
-        if (eventType.includes('failed')) return 'failed';
-        if (eventType.includes('sent')) return 'sent';
-        return undefined;
+    const docs = await this.paymentMailModel
+      .find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return docs.map((doc) => ({
+      id: String(doc._id),
+      orderCode: doc.orderCode,
+      orderId: doc.orderId,
+      userEmail: doc.userEmail,
+      subject: doc.subject,
+      status: doc.status,
+      resendEmailId: doc.resendEmailId,
+      resendLastEvent: doc.resendLastEvent,
+      sentAt: doc.sentAt,
+      eventAt: doc.eventAt,
+      createdAt: (doc as unknown as { createdAt?: Date }).createdAt,
+    }));
+  }
+
+  private extractOrderCode(payload: ResendWebhookDto) {
+    const metadataOrderCode = payload.data?.metadata?.orderCode;
+    if (metadataOrderCode) {
+      const num = Number(metadataOrderCode);
+      if (Number.isFinite(num)) return num;
     }
 
-    private resolveFromEmail() {
-        return process.env.RESEND_FROM_EMAIL?.trim() || null;
+    const tags = payload.data?.tags;
+    if (Array.isArray(tags)) {
+      const tag = tags.find((item) => item?.name === 'orderCode');
+      if (tag?.value) {
+        const num = Number(tag.value);
+        if (Number.isFinite(num)) return num;
+      }
     }
 
-    private buildSuccessEmailHtml(params: { orderId: string; amount: number; appCourseUrl: string }) {
-        return `<!DOCTYPE html>
+    if (tags && typeof tags === 'object' && !Array.isArray(tags)) {
+      const tagValue = (tags as Record<string, unknown>).orderCode;
+      if (tagValue !== undefined && tagValue !== null) {
+        const num = Number(tagValue);
+        if (Number.isFinite(num)) return num;
+      }
+    }
+
+    return undefined;
+  }
+
+  private mapResendEventToEmailStatus(eventType: string) {
+    if (!eventType) return undefined;
+    if (eventType.includes('opened')) return 'opened';
+    if (eventType.includes('clicked')) return 'clicked';
+    if (eventType.includes('delivered')) return 'delivered';
+    if (eventType.includes('bounced')) return 'bounced';
+    if (eventType.includes('failed')) return 'failed';
+    if (eventType.includes('sent')) return 'sent';
+    return undefined;
+  }
+
+  private resolveFromEmail() {
+    return process.env.RESEND_FROM_EMAIL?.trim() || null;
+  }
+
+  private buildSuccessEmailHtml(params: {
+    orderId: string;
+    amount: number;
+    appCourseUrl: string;
+  }) {
+    return `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -285,5 +305,5 @@ export class PaymentMailService {
     </div>
 </body>
 </html>`;
-    }
+  }
 }

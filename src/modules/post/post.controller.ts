@@ -31,7 +31,7 @@ export class PostController {
     return this.postService.findAll(query, limit, page, search);
   }
 
-  @Get(':id')
+  @Get(':slug')
   @ApiOperation({ summary: 'Find a post by ID' })
   findOne(@Param('slug') slug: string) {
     return this.postService.findOne(slug);
