@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ResponseMessage } from '../../common/decorators/response-message.decorator';
@@ -18,5 +19,22 @@ export class DashboardController {
   @ApiOperation({ summary: 'Get overview statistics for admin dashboard' })
   async getOverview() {
     return this.dashboardService.getOverviewStats();
+  }
+
+  @Public()
+  @Get('insights')
+  @ResponseMessage('Lấy dữ liệu biểu đồ dashboard admin thành công')
+  @ApiOperation({ summary: 'Get dashboard trends and recent activities' })
+  async getInsights(
+    @Query('months') months?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedMonths = Number(months);
+    const parsedLimit = Number(limit);
+
+    return this.dashboardService.getInsights({
+      months: Number.isFinite(parsedMonths) ? parsedMonths : undefined,
+      limit: Number.isFinite(parsedLimit) ? parsedLimit : undefined,
+    });
   }
 }
