@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core/constants';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,11 +20,11 @@ import { LessonModule } from './modules/lesson/lesson.module';
 import { PaymentMailModule } from './modules/payment-mail/payment-mail.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { PostCategoryModule } from './modules/post-category/post-category.module';
+import { SlugCounterModule } from './modules/slug-counter/slug-counter.module';
 import { SkillModule } from './modules/skill/skill.module';
 import { UserModule } from './modules/user/user.module';
 import { UserLogModule } from './modules/user_log/user_log.module';
 import { PostModule } from './modules/post/post.module';
-import { PostCategoryModule } from './modules/post-category/post-category.module';
 
 @Module({
   imports: [
@@ -30,7 +35,9 @@ import { PostCategoryModule } from './modules/post-category/post-category.module
       useFactory: () => {
         const mongoUri = process.env.MONGODB_URL;
         if (!mongoUri) {
-          throw new Error('MONGODB_URL is not defined. Please check your .env file.');
+          throw new Error(
+            'MONGODB_URL is not defined. Please check your .env file.',
+          );
         }
         return { uri: mongoUri };
       },
@@ -48,10 +55,12 @@ import { PostCategoryModule } from './modules/post-category/post-category.module
     UserModule,
     UserLogModule,
     AuthModule,
+    SlugCounterModule,
   ],
-    controllers: [AppController],
-  providers: [AppService,
-        {
+  controllers: [AppController],
+  providers: [
+    AppService,
+    {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
@@ -59,11 +68,9 @@ import { PostCategoryModule } from './modules/post-category/post-category.module
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggerMiddleware)
-      .forRoutes({
-    path: '*path',
-    method: RequestMethod.ALL,
-  });
+    consumer.apply(LoggerMiddleware).forRoutes({
+      path: '*path',
+      method: RequestMethod.ALL,
+    });
   }
 }
