@@ -41,8 +41,13 @@ export class Lesson {
     @Prop({ type: String, default: '' })
     content?: string;
 
+    /** @deprecated Không dùng embed/iframe; video lưu qua videoFileKey + stream nội bộ */
     @Prop({ type: String, default: '' })
     videoUrl?: string;
+
+    /** Tên file trong thư mục uploads/lesson-videos (vd: uuid.mp4) */
+    @Prop({ type: String, default: '' })
+    videoFileKey?: string;
 
     @Prop({ type: String, default: '' })
     resourceUrl?: string;

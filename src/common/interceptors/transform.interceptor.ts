@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RESPONSE_MESSAGE } from '../decorators/response-message.decorator';
+import { SKIP_RESPONSE_TRANSFORM_KEY } from '../decorators/skip-response-transform.decorator';
 
 export interface Response<T> {
     statusCode: number;
@@ -24,6 +25,13 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
         context: ExecutionContext,
         next: CallHandler,
     ): Observable<Response<T>> {
+        const skipTransform = this.reflector.getAllAndOverride<boolean>(
+            SKIP_RESPONSE_TRANSFORM_KEY,
+            [context.getHandler(), context.getClass()],
+        );
+        if (skipTransform) {
+            return next.handle();
+        }
         return next.handle().pipe(
             map((result) => {
                 let responseData = result;
