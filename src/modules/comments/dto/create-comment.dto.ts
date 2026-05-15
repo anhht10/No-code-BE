@@ -14,6 +14,6 @@ export class CreateCommentDto {
 }
 
 export class ReactCommentDto {
-  @IsIn(['like', 'love', 'haha', 'wow', 'sad', 'angry'])
+  @IsIn(['like', 'dislike'])
   type: string;
 }

@@ -33,14 +33,39 @@ export class CommentService {
       parentId: dto.parentId || null,
       content: dto.content,
     });
-
     const populatedComment = await comment.populate('userId', 'name avatar');
 
-    await this.pusherService.trigger(
-      `post-${dto.postId}`,
-      'new-comment',
-      populatedComment,
-    );
+    const p = await this.commentModel.findByIdAndUpdate(dto.parentId, {
+      $inc: {
+        replyCount: 1,
+      },
+    });
+    console.log('Created comment:', p?.replyCount);
+
+    if (dto.parentId) {
+      console.log('Triggering pusher for reply:', {
+        channel: `reply-${dto.parentId}`,
+      });
+      await this.pusherService.trigger(
+        `reply-${dto.parentId}`,
+        'new-comment',
+        populatedComment,
+      );
+      await this.pusherService.trigger(
+        `post-${dto.postId}`,
+        'update-reply-count',
+        {
+          commentId: dto.parentId,
+          replyCount: p ? p.replyCount + 1 : 0,
+        },
+      );
+    } else {
+      await this.pusherService.trigger(
+        `post-${dto.postId}`,
+        'new-comment',
+        populatedComment,
+      );
+    }
 
     return populatedComment;
   }
@@ -49,11 +74,24 @@ export class CommentService {
     return this.commentModel
       .find({
         postId,
+        parentId: null,
       })
       .populate('userId', 'name avatar')
       .sort({
         createdAt: -1,
       });
+  }
+
+  async getReplies(parentId: string) {
+    return this.commentModel
+      .find({
+        parentId,
+      })
+      .populate('userId', 'name avatar')
+      .sort({
+        createdAt: 1,
+      })
+      .lean();
   }
 
   async reactComment(commentId: string, userId: string, dto: ReactCommentDto) {
@@ -78,14 +116,25 @@ export class CommentService {
 
     await comment.save();
 
-    await this.pusherService.trigger(
-      `post-${comment.postId}`,
-      'comment-reaction',
-      {
-        commentId,
-        reactions: comment.reactions,
-      },
-    );
+    if (comment.parentId) {
+      await this.pusherService.trigger(
+        `reply-${comment.parentId}`,
+        'comment-reaction',
+        {
+          commentId,
+          reactions: comment.reactions,
+        },
+      );
+    } else {
+      await this.pusherService.trigger(
+        `post-${comment.postId}`,
+        'comment-reaction',
+        {
+          commentId,
+          reactions: comment.reactions,
+        },
+      );
+    }
 
     return comment;
   }
@@ -103,14 +152,25 @@ export class CommentService {
 
     await comment.save();
 
-    await this.pusherService.trigger(
-      `post-${comment.postId}`,
-      'remove-reaction',
-      {
-        commentId,
-        reactions: comment.reactions,
-      },
-    );
+    if (comment.parentId) {
+      await this.pusherService.trigger(
+        `reply-${comment.parentId}`,
+        'remove-reaction',
+        {
+          commentId,
+          reactions: comment.reactions,
+        },
+      );
+    } else {
+      await this.pusherService.trigger(
+        `post-${comment.postId}`,
+        'remove-reaction',
+        {
+          commentId,
+          reactions: comment.reactions,
+        },
+      );
+    }
 
     return comment;
   }
@@ -128,13 +188,24 @@ export class CommentService {
 
     await comment.deleteOne();
 
-    await this.pusherService.trigger(
-      `post-${comment.postId}`,
-      'delete-comment',
-      {
-        commentId,
-      },
-    );
+    if (comment.parentId) {
+      await this.pusherService.trigger(
+        `reply-${comment.parentId}`,
+        'delete-comment',
+        {
+          commentId,
+          reactions: comment.reactions,
+        },
+      );
+    } else {
+      await this.pusherService.trigger(
+        `post-${comment.postId}`,
+        'delete-comment',
+        {
+          commentId,
+        },
+      );
+    }
 
     return {
       message: 'Deleted',

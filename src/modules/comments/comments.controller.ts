@@ -29,6 +29,14 @@ export class CommentController {
     return this.commentService.findByPost(postId);
   }
 
+  @Get(':id/replies')
+  getReplies(
+    @Param('id')
+    id: string,
+  ) {
+    return this.commentService.getReplies(id);
+  }
+
   @Post(':id/react')
   @Public()
   react(

@@ -25,8 +25,14 @@ export class Comment {
     type: mongoose.Schema.Types.ObjectId,
     ref: Comment.name,
     default: null,
+    index: true,
   })
   parentId: Types.ObjectId | null;
+
+  @Prop({
+    default: 0,
+  })
+  replyCount: number;
 
   @Prop({
     required: true,
@@ -44,7 +50,7 @@ export class Comment {
 
         type: {
           type: String,
-          enum: ['like', 'love', 'haha', 'wow', 'sad', 'angry'],
+          enum: ['like', 'dislike'],
         },
       },
     ],
