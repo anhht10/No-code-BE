@@ -27,6 +27,9 @@ import { UserModule } from './modules/user/user.module';
 import { UserLogModule } from './modules/user_log/user_log.module';
 import { PostModule } from './modules/post/post.module';
 import { PostSchedulesModule } from './modules/post-schedules/post-schedules.module';
+import { CartModule } from './modules/cart/cart.module';
+import { PusherModule } from './modules/pusher/pusher.module';
+import { CommentModule } from './modules/comments/comments.module';
 
 @Module({
   imports: [
@@ -56,10 +59,13 @@ import { PostSchedulesModule } from './modules/post-schedules/post-schedules.mod
     PostCategoryModule,
     SkillModule,
     UserModule,
+    CartModule,
     UserLogModule,
     AuthModule,
     SlugCounterModule,
     PostSchedulesModule,
+    PusherModule,
+    CommentModule,
   ],
   controllers: [AppController],
   providers: [

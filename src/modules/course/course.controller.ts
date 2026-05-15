@@ -1,8 +1,8 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Public } from '../auth/decorators/public.decorator';
 import { CourseService } from './course.service';
 import { CourseDetailParamsDto, CreateCourseDto } from './dto/course.dto';
-import { Public } from '../auth/decorators/public.decorator';
 
 
 @ApiTags('Courses')
@@ -27,6 +27,7 @@ export class CourseController {
   }
 
   @Post('/courses')
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
   @ApiOperation({ summary: 'Create a new course' })
   createCourse(@Body() createCourseDto: CreateCourseDto) {
     return this.courseService.create(createCourseDto);

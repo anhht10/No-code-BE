@@ -173,6 +173,20 @@ export class CourseService {
     };
   }
 
+  private sanitizeLessonForClient(lesson: CourseRecord): CourseRecord {
+    const id = lesson._id?.toString?.() ?? String(lesson._id ?? '');
+    const hasHosted = Boolean(lesson.videoFileKey);
+    const next: CourseRecord = { ...lesson };
+    delete next.videoFileKey;
+    delete next.videoUrl;
+    if (hasHosted && id) {
+      next.videoPlaybackUrl = `/lessons/${id}/video`;
+    } else {
+      next.videoPlaybackUrl = '';
+    }
+    return next;
+  }
+
   private transformCourseDetail(course: CourseRecord): CourseRecord {
     const transformedCourse = this.transformCourse(course);
 
@@ -180,9 +194,11 @@ export class CourseService {
       ? [...transformedCourse.modules].map((module) => ({
           ...module,
           lessons: Array.isArray(module.lessons)
-            ? [...module.lessons].sort(
-                (left, right) => (left.order ?? 0) - (right.order ?? 0),
-              )
+            ? [...module.lessons]
+                .sort(
+                  (left, right) => (left.order ?? 0) - (right.order ?? 0),
+                )
+                .map((lesson) => this.sanitizeLessonForClient(lesson))
             : [],
         }))
       : [];
