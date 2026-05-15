@@ -1,25 +1,23 @@
 import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { createReadStream, existsSync, mkdirSync, unlinkSync } from 'fs';
-import { statSync } from 'fs';
-import { basename, extname, join } from 'path';
+import type { Request, Response } from 'express';
+import { createReadStream, existsSync, mkdirSync, statSync, unlinkSync } from 'fs';
 import { Model, Types } from 'mongoose';
-import type { Response } from 'express';
-import type { Request } from 'express';
-import { Course, CourseDocument } from '../course/schemas/course.schema';
+import { basename, extname, join } from 'path';
 import {
-  CourseModule,
-  CourseModuleDocument,
+    CourseModule,
+    CourseModuleDocument,
 } from '../course-module/schemas/course-module.schema';
-import { Lesson, LessonDocument } from './schemas/lesson.schema';
+import { Course, CourseDocument } from '../course/schemas/course.schema';
 import { ImportOutlineDto } from './dto/lesson-admin.dto';
+import { Lesson, LessonDocument } from './schemas/lesson.schema';
 import { VideoWatermarkService } from './video-watermark.service';
 
 const VIDEO_SUBDIR = 'lesson-videos';

@@ -1,33 +1,33 @@
 import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Query,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
+    BadRequestException,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Query,
+    UploadedFile,
+    UseGuards,
+    UseInterceptors,
+    UsePipes,
+    ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiTags,
+    ApiBearerAuth,
+    ApiBody,
+    ApiConsumes,
+    ApiOperation,
+    ApiTags,
 } from '@nestjs/swagger';
+import { mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { join } from 'path';
-import { mkdirSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.guard';
-import { AdminRoleGuard } from '../auth/gaurds/admin-role.guard';
 import { ResponseMessage } from '../../common/decorators/response-message.decorator';
+import { AdminRoleGuard } from '../auth/gaurds/admin-role.guard';
+import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.guard';
 import { ImportOutlineDto } from './dto/lesson-admin.dto';
 import { LessonService } from './lesson.service';
 
