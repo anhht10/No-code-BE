@@ -10,7 +10,6 @@ import {
 
 import { CreateCommentDto, ReactCommentDto } from './dto/create-comment.dto';
 import { CommentService } from './comments.service';
-import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('comments')
 export class CommentController {
@@ -24,7 +23,6 @@ export class CommentController {
   }
 
   @Get('post/:postId')
-  @Public()
   findByPost(@Param('postId') postId: string) {
     return this.commentService.findByPost(postId);
   }
@@ -38,7 +36,6 @@ export class CommentController {
   }
 
   @Post(':id/react')
-  @Public()
   react(
     @Param('id') id: string,
     @Req() req: any,
@@ -49,16 +46,13 @@ export class CommentController {
   }
 
   @Delete(':id/react')
-  @Public()
   removeReaction(@Param('id') id: string, @Req() req: any) {
     const userId = req.user?.userId || req.user?._id || req.user?.id;
     return this.commentService.removeReaction(id, userId);
   }
 
   @Delete(':id')
-  @Public()
   remove(@Param('id') id: string, @Req() req: any) {
-    const userId = req.user?.userId || req.user?._id || req.user?.id;
-    return this.commentService.remove(id, userId);
+    return this.commentService.remove(id, req.user);
   }
 }

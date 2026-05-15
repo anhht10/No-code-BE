@@ -33,7 +33,10 @@ export class CommentService {
       parentId: dto.parentId || null,
       content: dto.content,
     });
-    const populatedComment = await comment.populate('userId', 'name avatar');
+    const populatedComment = await comment.populate(
+      'userId',
+      'name avatar role',
+    );
 
     const p = await this.commentModel.findByIdAndUpdate(dto.parentId, {
       $inc: {
@@ -76,7 +79,7 @@ export class CommentService {
         postId,
         parentId: null,
       })
-      .populate('userId', 'name avatar')
+      .populate('userId', 'name avatar role')
       .sort({
         createdAt: -1,
       });
@@ -87,7 +90,7 @@ export class CommentService {
       .find({
         parentId,
       })
-      .populate('userId', 'name avatar')
+      .populate('userId', 'name avatar role')
       .sort({
         createdAt: 1,
       })
@@ -175,14 +178,15 @@ export class CommentService {
     return comment;
   }
 
-  async remove(commentId: string, userId: string) {
+  async remove(commentId: string, user: { userId: string; role: string }) {
     const comment = await this.commentModel.findById(commentId);
 
+    console.log('Removing comment:', commentId, 'by user:', user);
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
 
-    if (comment.userId.toString() !== userId) {
+    if (comment.userId.toString() !== user.userId && user.role !== 'admin') {
       throw new BadRequestException('No permission');
     }
 
@@ -197,6 +201,11 @@ export class CommentService {
           reactions: comment.reactions,
         },
       );
+      await this.commentModel.findByIdAndUpdate(comment.parentId, {
+        $inc: {
+          replyCount: -1,
+        },
+      });
     } else {
       await this.pusherService.trigger(
         `post-${comment.postId}`,
